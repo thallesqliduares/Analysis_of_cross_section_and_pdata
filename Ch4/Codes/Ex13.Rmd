@@ -1,0 +1,101 @@
+---
+title: " Analysis of cross section and panel data - J.Wooldridge Ch4 - Ex13"
+author: "Thalles Quinaglia Liduares"
+date: "30/03/2023"
+output: html_document
+---
+
+Use the data in CORNWELL.RAW (from Cornwell and Trumball, 1994) to
+estimate a model of county level crime rates, using the year 1987 only.
+
+a) Using logarithms of all variables, estimate a model relating the crime rate to the
+deterrent variables prbarr, prbconv, prbpris, and avgsen.
+
+Upload package
+
+```{r, warning=FALSE}
+library(wooldridge)
+```
+Upload data
+
+```{r}
+data<-wooldridge::crime4
+```
+Restrict the sample to 1987
+```{r}
+
+data_1987 <- subset(data, year == 87)
+```
+Take the natural logarithm of the variables
+
+```{r}
+
+data_1987$log_crmrte <- log(data_1987$crmrte)
+data_1987$log_prbarr <- log(data_1987$prbarr)
+data_1987$log_prbconv <- log(data_1987$prbconv)
+data_1987$log_prbpris <- log(data_1987$prbpris)
+data_1987$log_avgsen <- log(data_1987$avgsen)
+
+```
+Estimate the regression model
+```{r}
+model <- lm(log_crmrte ~ log_prbarr + log_prbconv + log_prbpris + log_avgsen, data = data_1987)
+```
+
+Results 
+
+```{r}
+
+summary(model)
+```
+
+b) Add log(crmrte) for 1986 as an additional explanatory variable, and comment on
+how the estimated elasticities di¤er from part a.
+
+
+Define variable
+
+```{r}
+
+data_1987$log_crmrte86 <- log(subset(data, year == 86)$crmrte)
+
+```
+Estimate model
+
+```{r}
+model2 <- lm(log_crmrte ~ log_prbarr + log_prbconv + log_prbpris + log_avgsen + log_crmrte86, data = data_1987)
+```
+
+Results
+
+```{r}
+summary(model2)
+```
+
+We can see from the regression results that the estimated elasticities in part b are generally smaller in magnitude than those in part a, except for the elasticity of the crime rate with respect to the probability of imprisonment, which is slightly larger in part b. This suggests that the inclusion of the lagged crime rate as an additional explanatory variable partially explains the relationship between the deterrent variables and the crime rate in 1987, and reduces the estimated elasticities. The coefficient of the lagged crime rate $\beta_5$ is positive and statistically significant, indicating that a higher crime rate in 1986 is associated with a higher crime rate in 1987, holding constant the other variables in the model.
+
+```{r}
+library(car)
+```
+F statistic for joint significance of the wage variables
+
+```{r}
+linearHypothesis(model2, c("log_prbarr = 0", "log_prbconv = 0", "log_prbpris = 0", "log_avgsen = 0"), test = "F")
+```
+
+The F statistic is 3.73 and its associated p-value is 0.007, which is less than the conventional significance level of 0.05. Therefore, we can reject the null hypothesis and conclude that at least one of the wage variables is significantly related to the crime rate in 1987.
+
+```{r}
+library(sandwich)
+```
+Compute robust standard errors
+```{r}
+robust_se <- sqrt(diag(vcovHC(model2)))
+```
+Compute the F statistic using robust standard errors
+```{r}
+
+linearHypothesis(model2, c("log_prbarr = 0", "log_prbconv = 0", "log_prbpris = 0", "log_avgsen = 0"), 
+                 vcov = vcovHC(model2), test = "F")
+```
+The F statistic is 2.01 and its associated p-value is 0.09, which is higher than the conventional significance level of 0.05. Therefore, we cannot reject the null hypothesis that at least one of the wage variables is significantly related to the crime rate in 1987.
