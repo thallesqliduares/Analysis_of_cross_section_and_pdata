@@ -1,0 +1,88 @@
+---
+title: "Ch4 - Ex14"
+author: "Thalles Quinaglia Liduares"
+date: "31/03/2023"
+output: html_document
+---
+
+Use the data in ATTEND.RAW from wooldridge r package to answer this question.
+a. To determine the effects of attending lecture on final exam performance, estimate
+a model relating stndfnl (the standardized final exam score) to atndrte (the percent of
+lectures attended). Include the binary variables frosh and soph as explanatory variables.
+Interpret the coeffcient on atndrte, and discuss its significance.
+
+Upload package
+
+```{r, message=FALSE}
+library(wooldridge)
+```
+
+Upload data
+
+```{r}
+data<-wooldridge::attend
+```
+
+Estimate model by OLS
+
+```{r}
+model <- lm(stndfnl ~ atndrte + frosh + soph, data)
+summary(model)
+```
+
+The coefficient on atndrte is 0.008163, which means that, on average, attending one additional lecture is associated with a  0.008163 standard deviation increase in final exam scores, holding constant the effects of being a freshman or sophomore. This coefficient is statistically significant. Therefore, we can conclude that attending lectures has a positive and significant effect on final exam performance.
+
+b. How confident are you that the OLS estimates from part a are estimating the
+causal e¤ect of attendence? Explain.
+
+Overall, while the OLS estimates in part a provide some evidence of a positive correlation between attendance and final exam scores, we cannot be fully confident that they are estimating the causal effect of attendance without addressing potential sources of bias and endogeneity.
+
+c. As proxy variables for student ability, add to the regression priGPA (prior cumulative GPA) and ACT (achievement test score). Now what is the e¤ect of atndrte?
+
+Discuss how the effect differs from that in part a
+
+```{r}
+
+model2 <- lm(stndfnl ~ atndrte + frosh + soph + priGPA + ACT, data)
+summary(model2)
+
+```
+The coefficient on atndrte is now 0.005225, which is smaller than the coefficient in part a. However, it is still statistically significant at the 5% level. This suggests that attending lectures has a positive and significant effect on final exam performance, even after controlling for prior cumulative GPA and achievement test scores.
+
+Overall, the effect of attending lectures on final exam performance in part c is smaller than in part a, which suggests that some of the effect of attendance is being captured by prior cumulative GPA and achievement test scores. However, attending lectures still has a significant positive effect on final exam performance, even after controlling for these variables.
+
+d. What happens to the significance of the dummy variables in part c as compared
+with part a? Explain.
+
+In part c, we added priGPA and ACT as explanatory variables, which are both highly correlated with final exam scores and likely to be correlated with the attendance variable as well. As a result, some of the variation in final exam scores that was previously being captured by the dummy variables frosh and soph in part a is now being explained by the new explanatory variables in part c.
+
+This means that the estimated coefficients for frosh and soph may be smaller in magnitude and less significant in part c compared to part a, since their explanatory power is now being shared with the other variables in the model.
+
+e. Add the squares of priGPA and ACT to the equation. What happens to the coefficient on atndrte? Are the quadratics jointly significant?
+
+```{r}
+model3 <- lm(stndfnl ~ atndrte + frosh + soph + priGPA + ACT+I(priGPA^2)+I(ACT^2), data)
+summary(model3)
+```
+
+```{r}
+library(car)
+
+linearHypothesis(model3, c("I(priGPA^2)=0", "I(ACT^2)=0"))
+```
+
+
+
+We see that the coefficient on atndrte has increased to 0.006, indicating a larger positive effect of attendance on final exam scores compared to part c. The squared terms for priGPA and ACT are both statistically significant, indicating nonlinear relationships between these variables and final exam scores. Also, based on F-Test, we observe that quadratic terms are jointly significant in explain the endogenous variable.
+
+f. To test for a nonlinear effect of atndrte, add its square to the equation from part e.
+What do you conclude?
+
+
+```{r}
+model4 <- lm(stndfnl ~ atndrte + frosh + soph + priGPA + ACT+I(priGPA^2)+I(ACT^2)+I(atndrte^2), data)
+summary(model4)
+
+```
+
+There is no significant evidence to suggest that the quadratic effect of attendance rate I(atndrte^2) has an impact on the final exam score, as the p-value is greater than 0.05. Therefore, we can conclude that the variable I(atndrte^2) is not statistically significant in explaining the variation in the final exam score, and it can be removed from the model without affecting the overall model fit.
